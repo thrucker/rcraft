@@ -57,6 +57,7 @@ public class PlanningObjectLoader {
             }
             return result;
         } catch (Exception ex) {
+            ex.printStackTrace();
             return null;
         }
     }

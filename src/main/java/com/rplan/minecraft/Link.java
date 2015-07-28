@@ -14,7 +14,9 @@ public class Link {
         link.sourceId = obj.get("source").toString();
         link.targetId = obj.get("target").toString();
         link.type = LinkType.fromString(obj.get("type").toString());
-        link.autolink = obj.get("autolink").toString();
+        if (obj.get("autolink") != null) {
+            link.autolink = obj.get("autolink").toString();
+        }
 
         return link;
     }

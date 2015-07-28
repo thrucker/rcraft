@@ -10,6 +10,11 @@ import org.joda.time.DateTimeConstants;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by rheinicke on 28/07/15.
  */
@@ -26,6 +31,7 @@ public class BlockPlacer {
     private final IBlockState calendarWeekEndDay;
     private final IBlockState calendarDayStart;
     private final IBlockState calendarWeekEndDayStart;
+    private final IBlockState linkState;
 
     public BlockPlacer(World world, BlockPos offset) {
         this.world = world;
@@ -36,6 +42,7 @@ public class BlockPlacer {
         calendarWeekEndDay = Block.getBlockById(35).getStateFromMeta(8);
         calendarDayStart = Block.getBlockById(171).getDefaultState();
         calendarWeekEndDayStart = Block.getBlockById(171).getStateFromMeta(8);
+        linkState = Block.getBlockById(57).getDefaultState();
     }
 
     public void render(PlanningObject[] pos) {
@@ -47,6 +54,188 @@ public class BlockPlacer {
             poIdMap.put(po.id, po);
         }
 
+        renderLinks(poIdMap);
+    }
+
+    private void renderLinks(Map<String, PlanningObject> poIdMap) {
+        List<Link> links = getLinks(poIdMap);
+
+        for (Link link : links) {
+            renderLink(link, poIdMap);
+        }
+    }
+
+    private void renderLink(Link link, Map<String, PlanningObject> poIdMap) {
+        PlanningObject sourcePo = poIdMap.get(link.sourceId);
+        PlanningObject targetPo = poIdMap.get(link.targetId);
+
+        int[] sourceCoordinates;
+        int[] targetCoordinates;
+        boolean down;
+        boolean right;
+        int sourceOffset = 0;
+        int targetOffset = 0;
+
+        switch (link.type) {
+            case START_START:
+                sourceCoordinates = getStartCoordinate(sourcePo);
+                targetCoordinates = getStartCoordinate(targetPo);
+                sourceOffset = -1;
+                targetOffset = -1;
+                break;
+            case START_END:
+                sourceCoordinates = getStartCoordinate(sourcePo);
+                targetCoordinates = getEndCoordinate(targetPo);
+                sourceOffset = -1;
+                targetOffset = 1;
+                break;
+            case END_START:
+                sourceCoordinates = getEndCoordinate(sourcePo);
+                targetCoordinates = getStartCoordinate(targetPo);
+                sourceOffset = 1;
+                targetOffset = -1;
+                break;
+            case END_END:
+                sourceCoordinates = getEndCoordinate(sourcePo);
+                targetCoordinates = getEndCoordinate(targetPo);
+                sourceOffset = 1;
+                targetOffset = 1;
+                break;
+            default:
+                throw new RuntimeException("unknown link type");
+        }
+
+        world.setBlockState(offset.add(sourceCoordinates[0], 0, sourceCoordinates[1]), linkState);
+        world.setBlockState(offset.add(targetCoordinates[0], 0, targetCoordinates[1]), linkState);
+
+        sourceCoordinates[0] += sourceOffset;
+        targetCoordinates[0] += targetOffset;
+
+        down = targetCoordinates[1] - sourceCoordinates[1] > 0;
+        right = targetCoordinates[0] - sourceCoordinates[0] > 0;
+
+        if (down) {
+            if (right) {
+                switch (link.type) {
+                    case START_END:
+                        renderLinkVHV(sourceCoordinates, targetCoordinates, false, false);
+                        break;
+                    case START_START:
+                    case END_START:
+                        renderLinkVH(sourceCoordinates, targetCoordinates, false, false);
+                        break;
+                    case END_END:
+                        renderLinkHV(sourceCoordinates, targetCoordinates, false, false);
+                        break;
+                }
+            } else {
+                switch (link.type) {
+                    case START_START:
+                    case START_END:
+                        renderLinkHV(sourceCoordinates, targetCoordinates, true, false);
+                        break;
+                    case END_START:
+                        renderLinkVHV(sourceCoordinates, targetCoordinates, true, false);
+                        break;
+                    case END_END:
+                        renderLinkVH(sourceCoordinates, targetCoordinates, true, false);
+                        break;
+                }
+            }
+        } else {
+            if (right) {
+                switch (link.type) {
+                    case START_END:
+                        renderLinkVHV(sourceCoordinates, targetCoordinates, false, true);
+                        break;
+                    case START_START:
+                    case END_START:
+                        renderLinkVH(sourceCoordinates, targetCoordinates, false, true);
+                        break;
+                    case END_END:
+                        renderLinkHV(sourceCoordinates, targetCoordinates, false, true);
+                        break;
+                }
+            } else {
+                switch (link.type) {
+                    case START_START:
+                    case START_END:
+                        renderLinkHV(sourceCoordinates, targetCoordinates, true, true);
+                        break;
+                    case END_START:
+                        renderLinkVHV(sourceCoordinates, targetCoordinates, true, true);
+                        break;
+                    case END_END:
+                        renderLinkVH(sourceCoordinates, targetCoordinates, true, true);
+                        break;
+                }
+            }
+        }
+    }
+
+    private void renderLinkVHV(int[] sourceCoordinates, int[] targetCoordinates, boolean invertH, boolean invertV) {
+        // V
+        int from1 = invertV ? targetCoordinates[1] : sourceCoordinates[1];
+        int to1 = from1 + 3;
+        for (int y = from1; y <= to1; y++) {
+            world.setBlockState(offset.add(sourceCoordinates[0], 0, y), linkState);
+        }
+
+        // H
+        int from2 = invertH ? targetCoordinates[0] : sourceCoordinates[0];
+        int to2 = invertH ? sourceCoordinates[0] : targetCoordinates[0];
+        for (int x = from2; x <= to2; x++) {
+            world.setBlockState(offset.add(x, 0, to1), linkState);
+        }
+
+        // V
+        int from3 = to1;
+        int to3 = invertV ? sourceCoordinates[1] : targetCoordinates[1];
+        for (int y = from3; y <= to3; y++) {
+            world.setBlockState(offset.add(to2, 0, y), linkState);
+        }
+    }
+
+    private void renderLinkVH(int[] sourceCoordinates, int[] targetCoordinates, boolean invertH, boolean invertV) {
+        // V
+        int from1 = invertV ? targetCoordinates[1] : sourceCoordinates[1];
+        int to1 = invertV ? sourceCoordinates[1] : targetCoordinates[1];
+        for (int y = from1; y <= to1; y++) {
+            world.setBlockState(offset.add(sourceCoordinates[0], 0, y), linkState);
+        }
+
+        // H
+        int from2 = invertH ? targetCoordinates[0] : sourceCoordinates[0];
+        int to2 = invertH ? sourceCoordinates[0] : targetCoordinates[0];
+        for (int x = from2; x <= to2; x++) {
+            world.setBlockState(offset.add(x, 0, targetCoordinates[1]), linkState);
+        }
+    }
+
+    private void renderLinkHV(int[] sourceCoordinates, int[] targetCoordinates, boolean invertH, boolean invertV) {
+        // H
+        int from1 = invertH ? targetCoordinates[0] : sourceCoordinates[0];
+        int to1 = invertH ? sourceCoordinates[0] : targetCoordinates[0];
+        for (int x = from1; x <= to1; x++) {
+            world.setBlockState(offset.add(x, 0, sourceCoordinates[1]), linkState);
+        }
+
+        // V
+        int from2 = invertV ? targetCoordinates[1] : sourceCoordinates[1];
+        int to2 = invertV ? sourceCoordinates[1] : targetCoordinates[1];
+        for (int y = from2; y <= to2; y++) {
+            world.setBlockState(offset.add(targetCoordinates[0], 0, y), linkState);
+        }
+    }
+
+    private List<Link> getLinks(Map<String, PlanningObject> poIdMap) {
+        List<Link> links = new ArrayList<Link>();
+
+        for (PlanningObject po : poIdMap.values()) {
+            links.addAll(po.links);
+        }
+
+        return links;
     }
 
     public void render(PlanningObject po) {
@@ -95,6 +284,21 @@ public class BlockPlacer {
                 world.setBlockState(pos, state);
             }
         }
+    }
+
+    private int[] getStartCoordinate(PlanningObject po) {
+        int x = po.offsetDays * PO_WIDTH - 1;
+        int y = po.lineNumber * PO_HEIGHT + 1;
+
+        return new int[] {x, y};
+    }
+
+    private int[] getEndCoordinate(PlanningObject po) {
+        int x = po.offsetDays * PO_WIDTH;
+        int y = po.lineNumber * PO_HEIGHT + 1;
+        int width = po.duration * PO_WIDTH;
+
+        return new int[] {x + width, y};
     }
 
     private void renderLittleHooks(PlanningObject po) {
