@@ -1,4 +1,4 @@
-package com.example.examplemod;
+package com.rplan.minecraft;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDirt;

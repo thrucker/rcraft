@@ -1,4 +1,4 @@
-package com.example.examplemod;
+package com.rplan.minecraft;
 
 import java.util.List;
 
@@ -10,15 +10,13 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
-@Mod(modid = ExampleMod.MODID, version = ExampleMod.VERSION)
-public class ExampleMod
+@Mod(modid = RCraftMod.MODID, version = RCraftMod.VERSION)
+public class RCraftMod
 {
-    public static final String MODID = "examplemod";
-    public static final String VERSION = "1.0";
+    public static final String MODID = "rcraftmod";
+    public static final String VERSION = "0.1";
     
     @EventHandler
     public void init(FMLInitializationEvent event)
