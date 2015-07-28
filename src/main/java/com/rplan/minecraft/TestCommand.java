@@ -20,11 +20,12 @@ public class TestCommand extends CommandBase {
 	@Override
 	public void execute(ICommandSender sender, String[] args) throws CommandException {
         try {
-            String cookie = RestClient.login(args[0], args[1]);
+            String cookie = RestClient.login("lorenz.hahn@actano.de", "MacBook Air");
             PlanningObjectLoader loader = new PlanningObjectLoader(cookie);
             PlanningObject[] pos = loader.getAll();
 
             BlockPlacer placer = new BlockPlacer(sender.getEntityWorld(), sender.getPosition());
+			placer.renderCalendar(pos);
             placer.render(pos);
         }
         catch (Exception ex) {

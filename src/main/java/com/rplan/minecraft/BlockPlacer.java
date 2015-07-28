@@ -5,6 +5,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,6 +35,7 @@ public class BlockPlacer {
 
     public void render(PlanningObject[] pos) {
         Map<String, PlanningObject> poIdMap = new HashMap<String, PlanningObject>();
+
 
         for (PlanningObject po : pos) {
             render(po);
@@ -106,11 +108,28 @@ public class BlockPlacer {
         world.setBlockState(offset.add(x + width - 2, 0, y + height), state);
 
     }
+
+    public void renderCalendar(PlanningObject[] pos) {
+        int lines = pos.length;
+        int days = getTimeDeltaFromPOs(pos);
+
+        renderCalendar(offset, days, lines);
+    }
+
+    private int getTimeDeltaFromPOs(PlanningObject[] pos) {
+        int maxEnd = 0;
+        for (PlanningObject po : pos) {
+            int endDay = po.offsetDays + po.duration;
+            maxEnd = endDay > maxEnd? endDay : maxEnd;
+        }
+        return maxEnd;
+    }
+
     public void renderCalendar(BlockPos offset, int days, int pos) {
         for (int day = 0; day < days; day++) {
             for (int row = 0; row < pos; row++) {
-                offset.add(row * PO_HEIGHT, CALENDAR_OFFSET, day * PO_WIDTH);
-                renderDay(offset);
+                BlockPos location = offset.add(row * PO_HEIGHT, CALENDAR_OFFSET, day * PO_WIDTH);
+                renderDay(location);
             }
         }
 
@@ -136,4 +155,5 @@ public class BlockPlacer {
             return poState;
         }
     }
+
 }
