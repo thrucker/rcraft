@@ -11,6 +11,9 @@ import net.minecraft.world.World;
  * Created by rheinicke on 28/07/15.
  */
 public class BlockPlacer {
+
+    private static final int PO_HEIGHT = 6;
+    private static final int PO_WIDTH = 6;
     private World world;
     private BlockPos offset;
     private IBlockState poState;
@@ -25,9 +28,9 @@ public class BlockPlacer {
     }
 
     public void render(PlanningObject po) {
-        int y = po.lineNumber * 6;
-        int x = po.offsetDays * 5;
-        int width = po.duration * 5;
+        int y = po.lineNumber * PO_HEIGHT;
+        int x = po.offsetDays * PO_WIDTH;
+        int width = po.duration * PO_WIDTH;
         int height = 3;
 
 //        System.out.println("Placing " + po.name);
@@ -53,6 +56,11 @@ public class BlockPlacer {
             world.setBlockState(offset.add(x + width - 1, 0, y + height + 1), state);
             world.setBlockState(offset.add(x + width - 2, 0, y + height), state);
         }
+    }
+
+    public void renderCalendar(BlockPos offset, int days, int pos) {
+
+
     }
 
     private IBlockState getState(PlanningObject po) {
