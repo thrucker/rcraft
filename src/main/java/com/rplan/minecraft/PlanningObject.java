@@ -1,5 +1,7 @@
 package com.rplan.minecraft;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -8,12 +10,52 @@ import java.util.Map;
 public class PlanningObject {
     public String name;
     public String id;
+    public String parentId;
+    public int duration;
+    public Date start;
+    public int offsetDays;
+    public int lineNumber;
+    public boolean isProject;
 
     public static PlanningObject parse(Map<String, Object> obj) {
         PlanningObject po = new PlanningObject();
         po.id = obj.get("id").toString();
         po.name = obj.get("name").toString();
+        po.parentId = obj.get("parent").toString();
+
+        po.isProject =(Boolean)obj.get("isProject");
+
+        if (po.isProject) {
+            po.duration = getDuration(obj, "userDefinedDuration", "calculatedDuration");
+            po.start = getStart(obj, "userDefinedStart", "calculatedStart");
+        } else {
+            po.duration = getDuration(obj, "calculatedDuration", "userDefinedDuration");
+            po.start = getStart(obj, "calculatedStart", "userDefinedStart");
+        }
         return po;
+    }
+
+    private static int getDuration(Map<String, Object> obj, String fieldA, String fieldB) {
+        Object calculatedDuration = obj.get(fieldA);
+        if (calculatedDuration != null) {
+            return (Integer)calculatedDuration;
+        } else {
+            return (Integer)obj.get(fieldB);
+        }
+    }
+
+    private static Date getStart(Map<String, Object> obj, String fieldA, String fieldB) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            Object calculatedStart = obj.get(fieldA);
+            if (calculatedStart != null) {
+                return formatter.parse(calculatedStart.toString());
+            } else {
+                return formatter.parse(obj.get(fieldB).toString());
+            }
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     public String toString() {
