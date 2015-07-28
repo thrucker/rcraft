@@ -20,7 +20,7 @@ public class BlockPlacer {
         this.world = world;
         this.offset = offset;
         poState = Block.getBlockById(133).getDefaultState();
-        summaryState = Block.getBlockById(1).getDefaultState();
+        summaryState = Block.getBlockById(1).getStateFromMeta(6);
 
     }
 
@@ -41,6 +41,17 @@ public class BlockPlacer {
                 IBlockState state = getState(po);
                 world.setBlockState(pos, state);
             }
+        }
+
+        if (po.isSummaryTask || po.isProject) {
+            IBlockState state = getState(po);
+            world.setBlockState(offset.add(x, 0, y + height), state);
+            world.setBlockState(offset.add(x, 0, y + height + 1), state);
+            world.setBlockState(offset.add(x + 1, 0, y + height), state);
+
+            world.setBlockState(offset.add(x + width - 1, 0, y + height), state);
+            world.setBlockState(offset.add(x + width - 1, 0, y + height + 1), state);
+            world.setBlockState(offset.add(x + width - 2, 0, y + height), state);
         }
     }
 
