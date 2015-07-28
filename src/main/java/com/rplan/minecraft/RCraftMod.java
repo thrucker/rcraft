@@ -35,12 +35,6 @@ public class RCraftMod
     @EventHandler
     public void init(FMLInitializationEvent event)
     {
-		// some example code
-        System.out.println("DIRT BLOCK >> "+Blocks.dirt.getUnlocalizedName());
-        List recipies = CraftingManager.getInstance().getRecipeList();
-        //GameRegistry.addRecipe(recipe);
-        IRecipe recipe = (IRecipe) recipies.get(0);
-        ICommandManager manager;
         proxy.init(event);
     }
 
