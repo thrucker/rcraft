@@ -14,3 +14,7 @@ forge-1.8-11.14.3.1450-changelog.txt
 gradle
 gradlew
 gradlew.bat
+out
+*.iml
+*.iws
+*.ipr
