@@ -2,9 +2,7 @@ package com.rplan.minecraft;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 
 /**
@@ -24,19 +22,46 @@ public class BlockPlacer {
         this.offset = offset;
         poState = Block.getBlockById(133).getDefaultState();
         summaryState = Block.getBlockById(1).getStateFromMeta(6);
-
     }
 
     public void render(PlanningObject po) {
+        if (po.isProject || po.isSummaryTask) {
+            renderTask(po);
+            renderLittleHooks(po);
+        } else {
+            if (po.duration == 0) {
+                renderMilestone(po);
+            } else {
+                renderTask(po);
+            }
+        }
+    }
+
+    private void renderMilestone(PlanningObject po) {
+        int y = po.lineNumber * PO_HEIGHT;
+        int x = po.offsetDays * PO_WIDTH;
+
+        IBlockState state = getState(po);
+        world.setBlockState(offset.add(x + 0, 0, y + 0), state);
+        world.setBlockState(offset.add(x - 1, 0, y + 1), state);
+        world.setBlockState(offset.add(x + 0, 0, y + 1), state);
+        world.setBlockState(offset.add(x + 1, 0, y + 1), state);
+        world.setBlockState(offset.add(x - 2, 0, y + 2), state);
+        world.setBlockState(offset.add(x - 1, 0, y + 2), state);
+        world.setBlockState(offset.add(x + 0, 0, y + 2), state);
+        world.setBlockState(offset.add(x + 1, 0, y + 2), state);
+        world.setBlockState(offset.add(x + 2, 0, y + 2), state);
+        world.setBlockState(offset.add(x - 1, 0, y + 3), state);
+        world.setBlockState(offset.add(x + 0, 0, y + 3), state);
+        world.setBlockState(offset.add(x + 1, 0, y + 3), state);
+        world.setBlockState(offset.add(x + 0, 0, y + 4), state);
+    }
+
+    private void renderTask(PlanningObject po) {
         int y = po.lineNumber * PO_HEIGHT;
         int x = po.offsetDays * PO_WIDTH;
         int width = po.duration * PO_WIDTH;
         int height = 3;
-
-//        System.out.println("Placing " + po.name);
-//        System.out.println("LineNumber: " + po.lineNumber);
-//        System.out.println("OffsetDays: " + po.offsetDays);
-//        System.out.println("Duration:" + po.duration);
 
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
@@ -45,19 +70,24 @@ public class BlockPlacer {
                 world.setBlockState(pos, state);
             }
         }
-
-        if (po.isSummaryTask || po.isProject) {
-            IBlockState state = getState(po);
-            world.setBlockState(offset.add(x, 0, y + height), state);
-            world.setBlockState(offset.add(x, 0, y + height + 1), state);
-            world.setBlockState(offset.add(x + 1, 0, y + height), state);
-
-            world.setBlockState(offset.add(x + width - 1, 0, y + height), state);
-            world.setBlockState(offset.add(x + width - 1, 0, y + height + 1), state);
-            world.setBlockState(offset.add(x + width - 2, 0, y + height), state);
-        }
     }
 
+    private void renderLittleHooks(PlanningObject po) {
+        int y = po.lineNumber * PO_HEIGHT;
+        int x = po.offsetDays * PO_WIDTH;
+        int width = po.duration * PO_WIDTH;
+        int height = 3;
+
+        IBlockState state = getState(po);
+        world.setBlockState(offset.add(x, 0, y + height), state);
+        world.setBlockState(offset.add(x, 0, y + height + 1), state);
+        world.setBlockState(offset.add(x + 1, 0, y + height), state);
+
+        world.setBlockState(offset.add(x + width - 1, 0, y + height), state);
+        world.setBlockState(offset.add(x + width - 1, 0, y + height + 1), state);
+        world.setBlockState(offset.add(x + width - 2, 0, y + height), state);
+
+    }
     public void renderCalendar(BlockPos offset, int days, int pos) {
 
 
