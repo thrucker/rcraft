@@ -1,6 +1,7 @@
 package com.rplan.minecraft;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ public class PlanningObject {
     public int offsetDays;
     public int lineNumber;
     public boolean isProject;
+    public boolean isSummaryTask;
 
     public static PlanningObject parse(Map<String, Object> obj) {
         PlanningObject po = new PlanningObject();
@@ -23,7 +25,9 @@ public class PlanningObject {
         po.name = obj.get("name").toString();
         po.parentId = obj.get("parent").toString();
 
-        po.isProject =(Boolean)obj.get("isProject");
+        Object x = obj.get("childrenIds");
+        po.isProject = (Boolean)obj.get("isProject");
+        po.isSummaryTask = ((ArrayList)obj.get("childrenIds")).size() > 0;
 
         if (po.isProject) {
             po.duration = getDuration(obj, "userDefinedDuration", "calculatedDuration");
