@@ -25,9 +25,7 @@ public class TestCommand extends CommandBase {
             PlanningObject[] pos = loader.getAll();
 
             BlockPlacer placer = new BlockPlacer(sender.getEntityWorld(), sender.getPosition());
-            for (int i = 0; i < pos.length; i++) {
-                placer.render(pos[i]);
-            }
+            placer.render(pos);
         }
         catch (Exception ex) {
             sender.addChatMessage(new ChatComponentText(ex.getMessage()));

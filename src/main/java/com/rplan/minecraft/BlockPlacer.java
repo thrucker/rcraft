@@ -24,6 +24,15 @@ public class BlockPlacer {
         summaryState = Block.getBlockById(1).getStateFromMeta(6);
     }
 
+    public void render(PlanningObject[] pos) {
+        Map<String, PlanningObject> poIdMap = new HashMap<String, PlanningObject>();
+
+        for (PlanningObject po : pos) {
+            render(po);
+            poIdMap.put(po.id, po);
+        }
+    }
+
     public void render(PlanningObject po) {
         if (po.isProject || po.isSummaryTask) {
             renderTask(po);
