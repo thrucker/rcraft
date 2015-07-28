@@ -4,6 +4,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +25,7 @@ public class BlockPlacer {
     private final IBlockState calendarWeekDay;
     private final IBlockState calendarWeekEndDay;
     private final IBlockState calendarDayStart;
+    private final IBlockState calendarWeekEndDayStart;
 
     public BlockPlacer(World world, BlockPos offset) {
         this.world = world;
@@ -31,7 +34,8 @@ public class BlockPlacer {
         summaryState = Block.getBlockById(1).getStateFromMeta(6);
         calendarWeekDay = Block.getBlockById(35).getDefaultState();
         calendarWeekEndDay = Block.getBlockById(35).getStateFromMeta(8);
-        calendarDayStart = Block.getStateById(171);
+        calendarDayStart = Block.getBlockById(171).getDefaultState();
+        calendarWeekEndDayStart = Block.getBlockById(171).getStateFromMeta(8);
     }
 
     public void render(PlanningObject[] pos) {
@@ -113,8 +117,9 @@ public class BlockPlacer {
     public void renderCalendar(PlanningObject[] pos) {
         int lines = pos.length;
         int days = getTimeDeltaFromPOs(pos);
+        DateTime start = getStartDate(pos);
 
-        renderCalendar(days, lines);
+        renderCalendar(start, days, lines);
     }
 
     private int getTimeDeltaFromPOs(PlanningObject[] pos) {
@@ -126,22 +131,48 @@ public class BlockPlacer {
         return maxEnd;
     }
 
-    public void renderCalendar(int days, int rows) {
-        for (int day = 0; day < days; day++) {
-            for (int row = 0; row < rows; row++) {
-                renderDay(day, row);
+    private DateTime getStartDate(PlanningObject[] pos) {
+        long minStart = Long.MAX_VALUE;
+        PlanningObject minPo = null;
+        for (PlanningObject po : pos) {
+            if (po.start.getTime() < minStart) {
+                minStart = po.start.getTime();
+                minPo = po;
             }
         }
-
+        DateTime dt = new DateTime(minPo.start);
+        return dt;
     }
 
-    public void renderDay(int day, int row) {
+    public void renderCalendar(DateTime start, int days, int rows) {
+        DateTime dateTime = start;
+        for (int day = 0; day < days; day++) {
+            for (int row = 0; row < rows; row++) {
+                renderDay(dateTime, day, row);
+            }
+            dateTime = dateTime.plusDays(1);
+        }
+    }
+
+    public void renderDay(DateTime start, int day, int row) {
         BlockPos topLeft = offset.add(day * PO_WIDTH, CALENDAR_OFFSET, row * PO_HEIGHT);
         for (int px = 0; px < PO_WIDTH; px++) {
             for (int pz = 0; pz < PO_HEIGHT; pz++) {
-                world.setBlockState(topLeft.add(px, 0, pz), calendarWeekDay);
+                IBlockState background;
+                IBlockState marker;
+
+                int dow = start.getDayOfWeek();
+                if (dow == DateTimeConstants.SATURDAY || dow == DateTimeConstants.SUNDAY) {
+                    background = calendarWeekEndDay;
+                    marker = calendarWeekEndDayStart;
+                } else {
+                    background = calendarWeekDay;
+                    marker = calendarDayStart;
+                }
+
+                world.setBlockState(topLeft.add(px, 0, pz), background);
                 if (px == 0) {
-                    world.setBlockState(topLeft.add(px, 1, pz), calendarDayStart);
+                    world.setBlockState(topLeft.add(px, 1, pz), marker);
                 } else {
                     world.setBlockToAir(topLeft.add(px, 1, pz));
                 }
