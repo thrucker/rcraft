@@ -5,7 +5,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +22,7 @@ public class BlockPlacer {
     private IBlockState summaryState;
     private final IBlockState calendarWeekDay;
     private final IBlockState calendarWeekEndDay;
+    private final IBlockState calendarDayStart;
 
     public BlockPlacer(World world, BlockPos offset) {
         this.world = world;
@@ -31,6 +31,7 @@ public class BlockPlacer {
         summaryState = Block.getBlockById(1).getStateFromMeta(6);
         calendarWeekDay = Block.getBlockById(35).getDefaultState();
         calendarWeekEndDay = Block.getBlockById(35).getStateFromMeta(8);
+        calendarDayStart = Block.getStateById(171);
     }
 
     public void render(PlanningObject[] pos) {
@@ -113,7 +114,7 @@ public class BlockPlacer {
         int lines = pos.length;
         int days = getTimeDeltaFromPOs(pos);
 
-        renderCalendar(offset, days, lines);
+        renderCalendar(days, lines);
     }
 
     private int getTimeDeltaFromPOs(PlanningObject[] pos) {
@@ -125,27 +126,27 @@ public class BlockPlacer {
         return maxEnd;
     }
 
-    public void renderCalendar(BlockPos offset, int days, int pos) {
+    public void renderCalendar(int days, int rows) {
         for (int day = 0; day < days; day++) {
-            for (int row = 0; row < pos; row++) {
-                BlockPos location = offset.add(row * PO_HEIGHT, CALENDAR_OFFSET, day * PO_WIDTH);
-                renderDay(location);
+            for (int row = 0; row < rows; row++) {
+                renderDay(day, row);
             }
         }
 
     }
 
-    public void renderDay(BlockPos offset) {
-        for (int px = 0; px < PO_WIDTH; px ++) {
-            for (int pz = 0; pz < PO_HEIGHT; pz ++) {
-                renderBlock(offset, px, pz, calendarWeekDay);
+    public void renderDay(int day, int row) {
+        BlockPos topLeft = offset.add(day * PO_WIDTH, CALENDAR_OFFSET, row * PO_HEIGHT);
+        for (int px = 0; px < PO_WIDTH; px++) {
+            for (int pz = 0; pz < PO_HEIGHT; pz++) {
+                world.setBlockState(topLeft.add(px, 0, pz), calendarWeekDay);
+                if (px == 0) {
+                    world.setBlockState(topLeft.add(px, 1, pz), calendarDayStart);
+                } else {
+                    world.setBlockToAir(topLeft.add(px, 1, pz));
+                }
             }
         }
-    }
-
-    private void renderBlock(BlockPos offset, int px, int pz, IBlockState block) {
-        BlockPos bp = new BlockPos(offset.getX() + px, offset.getY(), offset.getZ() + pz);
-        world.setBlockState(bp, block);
     }
 
     private IBlockState getState(PlanningObject po) {
