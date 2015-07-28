@@ -3,6 +3,7 @@ package com.rplan.minecraft;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,6 +19,7 @@ public class PlanningObject {
     public int lineNumber;
     public boolean isProject;
     public boolean isSummaryTask;
+    public List<Link> links;
 
     public static PlanningObject parse(Map<String, Object> obj) {
         PlanningObject po = new PlanningObject();
@@ -36,6 +38,15 @@ public class PlanningObject {
             po.duration = getDuration(obj, "calculatedDuration", "userDefinedDuration");
             po.start = getStart(obj, "calculatedStart", "userDefinedStart");
         }
+
+        po.links = new ArrayList<Link>();
+
+        List<Map<String, Object>> linkObjs = (List<Map<String, Object>>) obj.get("link");
+
+        for (Map<String, Object> linkObj : linkObjs) {
+            po.links.add(Link.parse(linkObj));
+        }
+
         return po;
     }
 
